@@ -88,7 +88,7 @@ class ImageGet:
                 fileName = os.path.join(self.PWD, os.path.basename(srcurl))  # 拼接文件名
                 if not os.path.exists(fileName):
                     self.imageCount += 1  # 本次抓取到的图片数+1
-                    with open(fileName, 'w') as fopen:
+                    with open(fileName, 'wb') as fopen:
                         fopen.write(r.content)  # 保存图片
         self._progressBar.next()
 
