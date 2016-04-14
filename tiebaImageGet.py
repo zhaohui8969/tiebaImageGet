@@ -2,9 +2,12 @@
 __author__ = 'natas'
 
 import requests
-import re
 import os
 from bs4 import BeautifulSoup
+from progress.bar import Bar
+import colorama
+
+colorama.init(autoreset=True)
 
 
 class ImageGet:
@@ -33,29 +36,42 @@ class ImageGet:
         MaxPageNum = int(pageList.contents[2].string)
 
         # 开始循环每一页抓图
-        self.savePageImages(soup, 1, MaxPageNum)
+        self._progressBar = Bar('进度', max=MaxPageNum)
+        self._progressBar.update()
+        self.savePageImages(soup)
         for pageNum in range(2, MaxPageNum + 1):
-            getparams = {'pn': 1}
+            getparams = {'pn': pageNum}
             htmlCont = self._session.get(self.pURL, params=getparams).content
             soup = BeautifulSoup(htmlCont, 'lxml')
-            self.savePageImages(soup, pageNum, MaxPageNum)
-        print("本次共计抓图 %3d 张\n保存在 %s" % (self.imageCount, self.PWD))
+            self.savePageImages(soup)
+        self._progressBar.finish()
+        self._repoter()
 
-    def savePageImages(self, pageSoup, jdNow, jdAll):
+    def savePageImages(self, pageSoup):
         for item in pageSoup.findAll('img', attrs={'class': "BDE_Image"}):
             srcurl = item.get('src')
             r = self._session.get(srcurl)
             if r:
-                self.imageCount += 1
-                with open(os.path.join(self.PWD, os.path.basename(srcurl)), 'w') as fopen:
-                    fopen.write(r.content)
-        print("进度: %3d/%3d" % (jdNow, jdAll))
+                fileName = os.path.join(self.PWD, os.path.basename(srcurl))
+                if not os.path.exists(fileName):
+                    self.imageCount += 1
+                    with open(fileName, 'w') as fopen:
+                        fopen.write(r.content)
+        self._progressBar.next()
+
+    def _repoter(self):
+        print("本次共计抓图 %s%d%s 张\n保存在 %s%s" %
+              (colorama.Fore.GREEN, self.imageCount, colorama.Fore.RESET,
+               colorama.Fore.YELLOW, self.PWD))
 
 
 def main():
     imageGetObj = ImageGet()
-    imageGetObj('4071733071');
-    pass
+    try:
+        imageGetObj('3421939896')
+    except (KeyboardInterrupt, SystemExit) as e:
+        print('\n\n用户取消')
+        imageGetObj._repoter()
 
 
 if __name__ == "__main__":
