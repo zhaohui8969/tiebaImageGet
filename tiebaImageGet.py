@@ -9,7 +9,6 @@ from bs4 import BeautifulSoup
 
 class ImageGet:
     def __init__(self):
-        self.imageRe = UrlChecker()
         self._session = requests.session()
         self.head = {'X-Requested-With': 'XMLHttpRequest',
                      'Referer': 'http://www.baidu.com',
@@ -23,31 +22,34 @@ class ImageGet:
         self.pURL = r'http://tieba.baidu.com/p/' + id
         print("抓取帖子：%s\n" % self.pURL)
         # 创建文件夹
-        PWD = os.path.join(self.basePWD, id)
-        if not os.path.exists(PWD):
-            os.makedirs(PWD)
+        self.PWD = os.path.join(self.basePWD, id)
+        if not os.path.exists(self.PWD):
+            os.makedirs(self.PWD)
         # pn Loop
         getparams = {'pn': 1}
         htmlCont = self._session.get(self.pURL, params=getparams).content
         soup = BeautifulSoup(htmlCont, 'lxml')
-        for item in soup.findAll('img', attrs={'class': "BDE_Image"}):
+        pageList = soup.find('li', attrs={'class': 'l_reply_num'})
+        MaxPageNum = int(pageList.contents[2].string)
+
+        # 开始循环每一页抓图
+        self.savePageImages(soup, 1, MaxPageNum)
+        for pageNum in range(2, MaxPageNum + 1):
+            getparams = {'pn': 1}
+            htmlCont = self._session.get(self.pURL, params=getparams).content
+            soup = BeautifulSoup(htmlCont, 'lxml')
+            self.savePageImages(soup, pageNum, MaxPageNum)
+        print("本次共计抓图 %3d 张\n保存在 %s" % (self.imageCount, self.PWD))
+
+    def savePageImages(self, pageSoup, jdNow, jdAll):
+        for item in pageSoup.findAll('img', attrs={'class': "BDE_Image"}):
             srcurl = item.get('src')
             r = self._session.get(srcurl)
             if r:
                 self.imageCount += 1
-                with open(os.path.join(PWD, os.path.basename(srcurl)), 'w') as fopen:
+                with open(os.path.join(self.PWD, os.path.basename(srcurl)), 'w') as fopen:
                     fopen.write(r.content)
-        print("本次共计抓图 %3d 张\n保存在 %s" % (self.imageCount, PWD))
-
-
-class UrlChecker:
-    def __init__(self):
-        self.imgre = re.compile(r".*\.(jpg|png|gif)$")
-
-    def __call__(self, url):
-        res = self.imgre.findall(url)
-        if res:
-            print('match %s' % res)
+        print("进度: %3d/%3d" % (jdNow, jdAll))
 
 
 def main():
