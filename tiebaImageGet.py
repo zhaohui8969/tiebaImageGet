@@ -1,17 +1,5 @@
 # coding:utf-8
-"""
-USAGE:
 
-python tiebaImageGet.py <pID>
-
-:param pID: 帖子的ID
-
-文件会保存在当前目录下的<pID>文件夹下
-
-example：    对于 http://tieba.baidu.com/p/3421939896
-            python tiebaImageGet.py 3421939896
-
-"""
 __author__ = 'natas'
 
 import requests
@@ -19,11 +7,11 @@ import os
 from bs4 import BeautifulSoup
 from progress.bar import Bar
 import colorama
-import sys
 import threading
 import signal
 import time
 import datetime
+from optparse import OptionParser
 
 colorama.init(autoreset=True)
 
@@ -33,10 +21,10 @@ class ImageGet:
     主要的类，实现图片下载
     """
 
-    def __init__(self, maxThread=10):
+    def __init__(self):
         """
         初始化
-        :return:
+        :return:None
         """
         self.head = {'X-Requested-With': 'XMLHttpRequest',
                      'Referer': 'http://www.baidu.com',
@@ -47,23 +35,24 @@ class ImageGet:
         self.imageCount = 0
         self._is_Exit = False  # 线程终止信号
         self.basePWD = r'image'  # 保存目录
-        self.maxThread = maxThread  # 最大线程数
         signal.signal(signal.SIGINT, self.handler)  # 设置对Ctrl - c 的响应
         signal.signal(signal.SIGTERM, self.handler)
-        print(u"%s红色有角 %sx%d %s倍速！" %
-              (colorama.Fore.RED, colorama.Fore.GREEN, maxThread, colorama.Fore.RED))
 
-    def __call__(self, pID):
+    def __call__(self, pID, maxThread):
         """
-        类的可调用方法
-        :param pID:帖子的id
+        开始下载
+        :param pID:     帖子的ID
+        :param maxThread:    最大线程数
         :return:None
         """
         self._start_time = datetime.datetime.now()  # 计时用
-        self.pURL = r'http://tieba.baidu.com/p/' + pID
+        self.maxThread = maxThread  # 最大线程数
+        print(u"%s红色有角 %sx%d %s倍速！" %
+              (colorama.Fore.RED, colorama.Fore.GREEN, maxThread, colorama.Fore.RED))
+        self.pURL = r'http://tieba.baidu.com/p/' + str(pID)
         print(u"抓取帖子：%s\n" % self.pURL)
         # 创建文件夹
-        self.PWD = os.path.join(self.basePWD, pID)
+        self.PWD = os.path.join(self.basePWD, str(pID))
         if not os.path.exists(self.PWD):
             os.makedirs(self.PWD)
         getparams = {'pn': 1}
@@ -103,10 +92,7 @@ class ImageGet:
                                    args=(lock, _sessionIter.next(), pool[i][0], pool[i][1]))
             threadPool.append(pro)
             pro.start()
-        # # 所有线程join
-        # for pro in threadPool:
-        #     pro.join()
-        # 每隔一段时间检测一下线程的状态
+        # 处理线程的退出
         while True:
             alive = False
             for i in threadPool:
@@ -120,8 +106,11 @@ class ImageGet:
 
     def savePageImages(self, lock, _session, start, end):
         """
-        保存页面中的图片
-        :param pageSoup:页面的Soup对象
+        保存图片到文件
+        :param lock: 线程锁
+        :param _session: 下载用到的session对象
+        :param start: 页数开始数字
+        :param end: 页数结束数字
         :return:None
         """
         for pageNum in range(start, end):
@@ -163,17 +152,22 @@ class ImageGet:
 
 def main():
     # 处理命令行参数
-    lenOfArgv = len(sys.argv)
-    if lenOfArgv == 1:
-        print(__doc__)
+    usage = u"%prog <-p 帖子ID> [-t 线程数]"
+    version = '1.0'
+    parser = OptionParser(usage=usage, version="%prog " + version)
+    parser.add_option('-p', dest='pid', type='int', help=u'设置帖子ID')
+    parser.add_option('-t', dest='max_thread_num', type='int', help=u'设置使用的线程数', default=10)
+    args, _ = parser.parse_args()
+    if not args.pid:
+        parser.print_help()
         return
-    pID = sys.argv[1]  # 帖子ID
-    if lenOfArgv > 2:
-        maxThread = int(sys.argv[2])
-        imageGetObj = ImageGet(maxThread)  # 设置线程数
-    else:
+    parser.print_version()
+    # 有异常？不管
+    try:
         imageGetObj = ImageGet()
-    imageGetObj(pID)
+        imageGetObj(args.pid, args.max_thread_num)
+    except Exception as e:
+        print(u'出了一些问题, 你可以自己去main()里的try块改改自己看看bug\n')
 
 
 if __name__ == "__main__":
