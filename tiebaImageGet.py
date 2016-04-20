@@ -50,7 +50,7 @@ class ImageGet:
         self.maxThread = maxThread  # 最大线程数
         signal.signal(signal.SIGINT, self.handler)  # 设置对Ctrl - c 的响应
         signal.signal(signal.SIGTERM, self.handler)
-        print("%s红色有角 %sx%d %s倍速！" %
+        print(u"%s红色有角 %sx%d %s倍速！" %
               (colorama.Fore.RED, colorama.Fore.GREEN, maxThread, colorama.Fore.RED))
 
     def __call__(self, pID):
@@ -61,7 +61,7 @@ class ImageGet:
         """
         self._start_time = datetime.datetime.now()  # 计时用
         self.pURL = r'http://tieba.baidu.com/p/' + pID
-        print("抓取帖子：%s\n" % self.pURL)
+        print(u"抓取帖子：%s\n" % self.pURL)
         # 创建文件夹
         self.PWD = os.path.join(self.basePWD, pID)
         if not os.path.exists(self.PWD):
@@ -73,7 +73,7 @@ class ImageGet:
         MaxPageNum = int(pageList.contents[2].string)  # 总页数
 
         # 显示进度条
-        self._progressBar = Bar('进度', max=MaxPageNum)  # 显示进度条
+        self._progressBar = Bar(u'进度', max=MaxPageNum)  # 显示进度条
         self._progressBar.update()
         # 多线程任务分割
         pool = {}  # 任务池
@@ -149,16 +149,16 @@ class ImageGet:
         :return:None
         """
         usedTime = datetime.datetime.now() - self._start_time
-        print("本次共计抓图 %s%d%s 张\n"
-              "用时 %s%s%s\n"
-              "保存在 %s%s" %
+        print(u"本次共计抓图 %s%d%s 张\n"
+              u"用时 %s%s%s\n"
+              u"保存在 %s%s" %
               (colorama.Fore.GREEN, self.imageCount, colorama.Fore.RESET,
                colorama.Fore.YELLOW, usedTime, colorama.Fore.RESET,
                colorama.Fore.YELLOW, self.PWD))  # 格式化输出报告信息
 
     def handler(self, signum, frame):
         self._is_Exit = True
-        print("\n%s不急...准备退出...正在善后..." % colorama.Fore.RED)
+        print(u"\n%s不急...准备退出...正在善后..." % colorama.Fore.RED)
 
 
 def main():
