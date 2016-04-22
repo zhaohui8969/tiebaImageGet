@@ -34,11 +34,10 @@ class ImageGet:
         self._session.headers.update(self.head)
         self.imageCount = 0
         self._is_Exit = False  # 线程终止信号
-        self.basePWD = r'image'  # 保存目录
         signal.signal(signal.SIGINT, self.handler)  # 设置对Ctrl - c 的响应
         signal.signal(signal.SIGTERM, self.handler)
 
-    def __call__(self, pID, maxThread):
+    def __call__(self, pID, maxThread, save_directory):
         """
         开始下载
         :param pID:     帖子的ID
@@ -52,7 +51,7 @@ class ImageGet:
         self.pURL = r'http://tieba.baidu.com/p/' + str(pID)
         print(u"抓取帖子：%s\n" % self.pURL)
         # 创建文件夹
-        self.PWD = os.path.join(self.basePWD, str(pID))
+        self.PWD = os.path.join(save_directory, str(pID))
         if not os.path.exists(self.PWD):
             os.makedirs(self.PWD)
         getparams = {'pn': 1}
@@ -157,7 +156,9 @@ def main():
     parser = OptionParser(usage=usage, version="%prog " + version)
     parser.add_option('-p', dest='pid', type='int', help=u'设置帖子ID')
     parser.add_option('-t', dest='max_thread_num', type='int', help=u'设置使用的线程数', default=10)
+    parser.add_option('-d', dest='save_directory', type='string', help=u'设置图片的保存目录', default=u'.')
     args, _ = parser.parse_args()
+    # 未设置关键参数时显示帮助
     if not args.pid:
         parser.print_help()
         return
@@ -165,7 +166,7 @@ def main():
     # 有异常？不管
     try:
         imageGetObj = ImageGet()
-        imageGetObj(args.pid, args.max_thread_num)
+        imageGetObj(args.pid, args.max_thread_num, args.save_directory)
     except Exception as e:
         print(u'出了一些问题, 你可以自己去main()里的try块改改自己看看bug\n')
 
