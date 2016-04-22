@@ -1,3 +1,6 @@
 .idea
 image
 test
+build
+dist
+tiebaImageGet.egg-info/
