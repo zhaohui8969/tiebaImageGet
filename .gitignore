@@ -4,3 +4,4 @@ test
 build
 dist
 tiebaImageGet.egg-info/
+tiebaImageGet/*.pyc
