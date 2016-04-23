@@ -1,5 +1,5 @@
 lxml>=3.5.0
 requests>=2.8.0
 beautifulsoup4>=4.0.0
-progressbar>=2.3
+progress>=1.2
 colorama>=0.3.6
