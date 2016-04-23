@@ -23,7 +23,7 @@ tiebaImageGet
 	
 `-p PID`	帖子ID（比如http://tieba.baidu.com/p/3349994578，就是3349994578）
 
-`-t MAX_THREAD_NUM`	程序最大线程数（因为默认就是10线程的，所以帖子页数没有超过10页的话，就不用设置这里）
+`-t MAX_THREAD_NUM`	图片下载线程数
 
 `-d SAVE_DIRECTORY` 下载目录（默认是当前目录，目录不存在的话会自动创建）
 
