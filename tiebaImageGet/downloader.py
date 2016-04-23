@@ -50,7 +50,7 @@ class Downloader:
         else:
             return None
 
-    def _break(self):
+    def breakme(self):
         with self.lock:
             self._is_alive = False
 
@@ -58,5 +58,5 @@ class Downloader:
         try:
             self.threadPool.poll()  # 看看有没有任务完成
         except threadpool.NoResultsPending:
-            self._break()
+            self.breakme()
         return self._is_alive
